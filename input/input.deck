@@ -1,1 +1,11 @@
 # everything after is a comment
+        lx = 400                # number of cells in x-direction
+        ly = 100                # number of cells in y-direction
+isObstacle = true               # if obstacle is present
+ xObstacle = 81                 # coordinate of obstacle's center in x-direction
+ yObstacle = 53                 # coordinate of obstacle's center in y-direction
+ rObstacle = 11                 # obstacle's radius
+      uMax = 0.1                # maximum velocity of Poiseuille flow at the inlet
+        Re = 100                # Reynolds number
+      Tmax = 400000             # total number of iterations
+     Tsave = 50                 # cycle time of saving to file operations

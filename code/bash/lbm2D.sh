@@ -30,6 +30,16 @@ Rectangular channel with circular obstacle.
 Tested in Ubuntu 14.04
 '
 
+function parseDataLine {
+  IFS='#' read -a dataPart <<< "$1"
+  IFS='=' read -a data <<< "${dataPart[0]}"
+  echo $((10#${data[1]}))
+}
+
+function checkVarExists {
+  if [ -z ${$1+x} ]; then echo $1" is unset"; else echo $1" is set"; fi
+}
+
 # read terminal and get input directory full path, input filename and output directory full path
 inputdir=$1
 inputfile=$2
@@ -46,11 +56,53 @@ echo "==========================================================================
 echo ""
 
 # create output directory if it does not exist
-
+echo ""
+echo "Creating output directory "$outputdir" ..."
+mkdir -p $outputdir
+echo "... done"
+echo ""
 # read input file and assign data to variables
-
+inputFullPath=$inputdir$inputfile
+echo ""
+echo "Reading input file "$inputFullPath" and assigning data to variables ..."
+while IFS= read -r line; do
+  if [[ $line == *"lx"* ]] ; then
+    lx = $( parseDataLine $line )
+  elif [[ $line == *"ly"* ]] ; then
+    ly = $( parseDataLine $line )
+  elif [[ $line == *"isObstacle"* ]] ; then
+    isObstacle = $( parseDataLine $line )
+  elif [[ $line == *"xObstacle"* ]] ; then
+    xObstacle = $( parseDataLine $line )
+  elif [[ $line == *"yObstacle"* ]] ; then
+    yObstacle = $( parseDataLine $line )
+  elif [[ $line == *"rObstacle"* ]] ; then
+    rObstacle = $( parseDataLine $line )
+  elif [[ $line == *"uMax"* ]] ; then
+    uMax = $( parseDataLine $line )
+  elif [[ $line == *"Re"* ]] ; then
+    Re = $( parseDataLine $line )
+  elif [[ $line == *"Tmax"* ]] ; then
+    Tmax = $( parseDataLine $line )
+  elif [[ $line == *"Tsave"* ]] ; then
+    Tsave = $( parseDataLine $line )
+  fi
+done < $inputFullPath
+echo "... done."
 # check if input variables exists otherwise throw an error
-if [ -z ${var+x} ]; then echo "var is unset"; else echo "var is set to '$var'"; fi
+
+
+# summarize simulation parameters
+echo ""
+echo "SIMULATION PARAMETERS"
+echo ""
+echo ""
+echo ""
+echo ""
+echo ""
+echo ""
+echo ""
+
 
 # set general flow properties
 
