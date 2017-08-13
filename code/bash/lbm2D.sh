@@ -30,21 +30,52 @@ Rectangular channel with circular obstacle.
 Tested in Ubuntu 14.04
 '
 
-function parseDataLine {
-  IFS='#' read -a dataPart <<< "$1"
-  IFS='=' read -a data <<< "${dataPart[0]}"
+clear
+
+function parseNumberDataLine {
+  IFS='#' read -ra dataPart <<< "$1"
+  IFS='=' read -ra data <<< "${dataPart[0]}"
+  #echo ${data[1]}
   echo $((10#${data[1]}))
 }
 
+function parseBooleanDataLine {
+  IFS='#' read -a dataPart <<< "$1"
+  IFS='=' read -a data <<< "${dataPart[0]}"
+  if [[ ${data[1]} == *"true"* ]] ; then
+    echo "true"
+  else
+    echo ""
+  fi
+}
+
 function checkVarExists {
-  if [ -z ${$1+x} ]; then echo $1" is unset"; else echo $1" is set"; fi
+  if [[ ${!1} ]] ; then
+    echo "$1 is set"
+  else
+    echo "$1 is not set"
+    echo "Error detected in input file. Data is missing. Interrupting execution."
+    exit
+  fi
 }
 
 # read terminal and get input directory full path, input filename and output directory full path
-inputdir=$1
-inputfile=$2
-outputdir=$3
-
+if [[ $# < 1 ]] ; then
+  echo ""
+  echo "Error: no input provided."
+  echo ""
+  exit
+elif [[ $# == 1 ]] ; then
+  echo ""
+  echo "./lbm2D.sh /input/directory/full/path/with/no/end/slash /input/filename/with/extension /output/directory/full/path"
+  echo ""
+  exit
+else
+  inputdir=$1
+  inputfile=$2
+  outputdir=$3
+fi
+# print header to screen
 echo ""
 echo "====================================================================================="
 echo ""
@@ -54,7 +85,6 @@ echo "                    Rectangular channel with circular obstacle"
 echo ""
 echo "====================================================================================="
 echo ""
-
 # create output directory if it does not exist
 echo ""
 echo "Creating output directory "$outputdir" ..."
@@ -62,51 +92,84 @@ mkdir -p $outputdir
 echo "... done"
 echo ""
 # read input file and assign data to variables
-inputFullPath=$inputdir$inputfile
+inputFullPath=$inputdir"/"$inputfile
 echo ""
 echo "Reading input file "$inputFullPath" and assigning data to variables ..."
 while IFS= read -r line; do
   if [[ $line == *"lx"* ]] ; then
-    lx = $( parseDataLine $line )
+    lx=$( parseNumberDataLine $line )
   elif [[ $line == *"ly"* ]] ; then
-    ly = $( parseDataLine $line )
+    ly=$( parseNumberDataLine $line )
   elif [[ $line == *"isObstacle"* ]] ; then
-    isObstacle = $( parseDataLine $line )
+    isObstacle=$( parseBooleanDataLine $line )
   elif [[ $line == *"xObstacle"* ]] ; then
-    xObstacle = $( parseDataLine $line )
+    xObstacle=$( parseNumberDataLine $line )
   elif [[ $line == *"yObstacle"* ]] ; then
-    yObstacle = $( parseDataLine $line )
+    yObstacle=$( parseNumberDataLine $line )
   elif [[ $line == *"rObstacle"* ]] ; then
-    rObstacle = $( parseDataLine $line )
+    rObstacle=$( parseNumberDataLine $line )
   elif [[ $line == *"uMax"* ]] ; then
-    uMax = $( parseDataLine $line )
+    uMax=$( parseNumberDataLine $line )
   elif [[ $line == *"Re"* ]] ; then
-    Re = $( parseDataLine $line )
+    Re=$( parseNumberDataLine $line )
   elif [[ $line == *"Tmax"* ]] ; then
-    Tmax = $( parseDataLine $line )
+    Tmax=$( parseNumberDataLine $line )
   elif [[ $line == *"Tsave"* ]] ; then
-    Tsave = $( parseDataLine $line )
+    Tsave=$( parseNumberDataLine $line )
   fi
 done < $inputFullPath
 echo "... done."
 # check if input variables exists otherwise throw an error
-
-
+echo ""
+echo "Checking if input variables are set ..."
+checkVarExists lx
+checkVarExists ly
+checkVarExists xObstacle
+checkVarExists yObstacle
+checkVarExists rObstacle
+checkVarExists uMax
+checkVarExists Re
+checkVarExists Tmax
+checkVarExists Tsave
+echo "... done."
+# set general flow properties
+echo ""
+echo "Setting general flow properties ..."
+nu=`echo "$uMax*2.0*$rObstacle/$Re" | bc -l` # kinematic viscosity
+omega=`echo "1.0/(3*$nu+0.5)" | bc -l`       # relaxation parameter
+echo "... done."
+# define D2Q9 lattice constants
+echo ""
+echo "Defining D2Q9 lattice constants ..."
+ws[0]=`echo "4.0/9.0" | bc -l`
+ws[1]=`echo "1.0/9.0" | bc -l`
+ws[2]=`echo "1.0/9.0" | bc -l`
+ws[3]=`echo "1.0/9.0" | bc -l`
+ws[4]=`echo "1.0/9.0" | bc -l`
+ws[5]=`echo "1.0/36.0" | bc -l`
+ws[6]=`echo "1.0/36.0" | bc -l`
+ws[7]=`echo "1.0/36.0" | bc -l`
+ws[8]=`echo "1.0/36.0" | bc -l`
+echo "... done."
 # summarize simulation parameters
 echo ""
 echo "SIMULATION PARAMETERS"
 echo ""
-echo ""
-echo ""
-echo ""
-echo ""
-echo ""
-echo ""
+echo "Number of cells in x-direction lx = "$lx
+echo "Number of cells in y-direction ly = "$ly
+echo "maximum velocity of Poiseuille flow at the inlet uMax = "$uMax
+echo "Reynolds number Re = "$Re
+echo "total number of iterations Tmax = "$Tmax
+echo "cycle time of saving to file operations Tsave = "$Tsave
+if [[ $isObstacle ]] ; then
+  echo "Obstacle is present:"
+  echo "    Coordinate of obstacle's center in x-direction xObstacle = "$xObstacle
+  echo "    Coordinate of obstacle's center in x-direction yObstacle = "$yObstacle
+  echo "                                 Obstacle's radius rObstacle = "$rObstacle
+else
+  echo "Obstacle is NOT present"
+fi
 
-
-# set general flow properties
-
-# define D2Q9 lattice constants
 
 # create mesh
 
