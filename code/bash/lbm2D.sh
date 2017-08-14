@@ -33,10 +33,12 @@ Tested in Ubuntu 14.04
 clear
 
 function parseNumberDataLine {
-  IFS='#' read -ra dataPart <<< "$1"
-  IFS='=' read -ra data <<< "${dataPart[0]}"
-  #echo ${data[1]}
-  echo $((10#${data[1]}))
+  #IFS='#' read -ra dataPart <<< "$1"
+  #IFS='=' read -ra data <<< "${dataPart[0]}"
+  string=$1
+  numstring="${string//[!0-9]/}"
+  #echo $((10#$numstring))
+  echo $numstring
 }
 
 function parseBooleanDataLine {
@@ -82,6 +84,8 @@ echo ""
 echo "   2D Lattice Boltzmann Method with D2Q9 lattice and Zou/He boundary conditions"
 echo ""
 echo "                    Rectangular channel with circular obstacle"
+echo ""
+echo "                          Luca Di Stasio, 2016-2017"
 echo ""
 echo "====================================================================================="
 echo ""
