@@ -4,7 +4,7 @@
 '''
 =====================================================================================
 
-Copyright (c) 2016 Université de Lorraine & Luleå tekniska universitet
+Copyright (c) 2017 - 2018 Université de Lorraine & Luleå tekniska universitet
 Author: Luca Di Stasio <luca.distasio@gmail.com>
                        <luca.distasio@ingpec.eu>
 
@@ -32,27 +32,132 @@ Tested with Python 2.7 in Ubuntu 14.04
 
 '''
 
-import sys
+import sys, os
 import errno
+import numpy as np
 from os import makedirs
-from os.path import join
+from os.path import isfile, join, exists
+from shutil import copyfile
 from datetime import datetime
 from time import strftime
 import getopt
+import timeit
 
-def parseInput(fileFullpath,keywords,types,commentSep,valueSep):
+#===============================================================================#
+#===============================================================================#
+#                              I/O functions
+#===============================================================================#
+#===============================================================================#
+
+#===============================================================================#
+#                              CSV files
+#===============================================================================#
+
+def createCSVfile(dir,filename,titleline=None):
+    if len(filename.split('.'))<2:
+        filename += '.csv'
+    with open(join(dir,filename),'w') as csv:
+        csv.write('# Automatically created on ' + datetime.now().strftime('%d/%m/%Y') + ' at' + datetime.now().strftime('%H:%M:%S') + '\n')
+        if titleline != None:
+            csv.write(titleline.replace('\n','') + '\n')
+
+def appendCSVfile(dir,filename,data):
+    # data is a list of lists
+    # each list is written to a row
+    # no check is made on data consistency
+    if len(filename.split('.'))<2:
+        filename += '.csv'
+    with open(join(dir,filename),'a') as csv:
+        for row in data:
+            line = ''
+            for v,value in enumerate(row):
+                if v>1:
+                    line += ', '
+                line += str(value)
+            csv.write(line + '\n')
+
+#===============================================================================#
+#                                 Log files
+#===============================================================================#
+
+def writeLineToLogFile(logFileFullPath,mode,line,toScreen):
+    with open(logFileFullPath,mode) as log:
+        log.write(line + '\n')
+    if toScreen:
+        print(line + '\n')
+
+def skipLineToLogFile(logFileFullPath,mode,toScreen):
+    with open(logFileFullPath,mode) as log:
+        log.write('\n')
+    if toScreen:
+        print('\n')
+
+def writeTitleSepLineToLogFile(logFileFullPath,mode,toScreen):
+    with open(logFileFullPath,mode) as log:
+        log.write('===============================================================================================\n')
+    if toScreen:
+        print('===============================================================================================\n')
+
+def writeTitleSecToLogFile(logFileFullPath,mode,title,toScreen):
+    writeTitleSepLineToLogFile(logFileFullPath,mode,toScreen)
+    writeTitleSepLineToLogFile(logFileFullPath,'a',toScreen)
+    skipLineToLogFile(logFileFullPath,'a',toScreen)
+    writeLineToLogFile(logFileFullPath,'a',title,toScreen)
+    skipLineToLogFile(logFileFullPath,'a',toScreen)
+    writeLineToLogFile(logFileFullPath,'a','Starting on ' + datetime.now().strftime('%Y-%m-%d') + ' at ' + datetime.now().strftime('%H:%M:%S'),toScreen)
+    skipLineToLogFile(logFileFullPath,'a',toScreen)
+    writeLineToLogFile(logFileFullPath,'a','Platform: ' + platform(),toScreen)
+    skipLineToLogFile(logFileFullPath,'a',toScreen)
+    writeTitleSepLineToLogFile(logFileFullPath,'a',toScreen)
+    writeTitleSepLineToLogFile(logFileFullPath,'a',toScreen)
+    skipLineToLogFile(logFileFullPath,'a',toScreen)
+
+def writeErrorToLogFile(logFileFullPath,mode,exc,err,toScreen):
+    with open(logFileFullPath,mode) as log:
+        log.write('!!! ----------------------------------------------------------------------------------------!!!\n')
+        log.write('\n')
+        log.write('                                     AN ERROR OCCURED\n')
+        log.write('\n')
+        log.write('                                -------------------------\n')
+        log.write('\n')
+        log.write(str(exc) + '\n')
+        log.write(str(err) + '\n')
+        log.write('\n')
+        log.write('Terminating program\n')
+        log.write('\n')
+        log.write('!!! ----------------------------------------------------------------------------------------!!!\n')
+        log.write('\n')
+    if toScreen:
+        print('!!! ----------------------------------------------------------------------------------------!!!\n')
+        print('\n')
+        print('                                     AN ERROR OCCURED\n')
+        print('\n')
+        print('                                -------------------------\n')
+        print('\n')
+        print(str(exc) + '\n')
+        print(str(err) + '\n')
+        print('\n')
+        print('Terminating program\n')
+        print('\n')
+        print('!!! ----------------------------------------------------------------------------------------!!!\n')
+        print('\n')
+
+#===============================================================================#
+#                                 Input file
+#===============================================================================#
+def parseInput(fileFullpath,keywords,keywordSep,commentSep,valueSep):
     with open(fileFullpath,'r') as f:
         lines = f.readlines()
     inputs = {}
     for key in keywords:
         for line in lines:
             if key in line:
-                if 'integer' in types[key]:
-                    inputs[key] = int(line.replace('\n','').split(commentSep)[0].split(valueSep)[1].replace(' ',''))
-                elif 'float' in types[key]:
-                    inputs[key] = float(line.replace('\n','').split(commentSep)[0].split(valueSep)[1].replace(' ',''))
-                elif 'boolean' in types[key]:
-                    inputField = line.replace('\n','').split(commentSep)[0].split('=')[1].replace(' ','')
+                if 'int' in line.replace('\n','').split(commentSep)[0].split(keywordSep)[1]:
+                    inputs[key] = int(line.replace('\n','').split(commentSep)[0].split(keywordSep)[0].split(valueSep)[1].replace(' ',''))
+                elif 'float' in line.replace('\n','').split(commentSep)[0].split(keywordSep)[1]:
+                    inputs[key] = float(line.replace('\n','').split(commentSep)[0].split(keywordSep)[0].split(valueSep)[1].replace(' ',''))
+                elif 'bool' in line.replace('\n','').split(commentSep)[0].split(keywordSep)[1]:
+                    inputField = line.replace('\n','').split(commentSep)[0].split(keywordSep)[0].split(valueSep)[1].replace(' ','')
                     if 'true' in inputField or 'TRUE' in inputField or 'True' in inputField:
                         inputs[key] = True
                     else:
@@ -62,6 +167,11 @@ def parseInput(fileFullpath,keywords,types,commentSep,valueSep):
                 break
     return inputs
 
+#===============================================================================#
+#===============================================================================#
+#                                    MAIN
+#===============================================================================#
+#===============================================================================#
 def main(argv):
 
     # Read the command line, throw error if not option is provided
@@ -123,47 +233,35 @@ def main(argv):
         print('Error: input directory not provided.')
         sys.exit(2)
     if 'outdir' not in locals():
-        print('Error: input directory not provided.')
+        print('Error: output directory not provided.')
         sys.exit(2)
-    # print header to screen
-    print('')
-    print('=====================================================================================')
-    print('')
-    print('   2D Lattice Boltzmann Method with D2Q9 lattice and Zou/He boundary conditions')
-    print('')
-    print('                    Rectangular channel with circular obstacle')
-    print('')
-    print('                          Luca Di Stasio, 2016-2017')
-    print('')
-    print('=====================================================================================')
-    print('')
-    # create output directory if it does not exist
-    print('')
-    print('Creating output directory ' + outdir + ' ...')
+
     try:
         makedirs(outdir)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-    print('... done')
-    print('')
+
+    logfilepath = join(outdir,datetime.strftime('%Y-%m-%d') + '_' + datetime.strftime('%H-%M-%S') + '_2DLBM-simulation' + '.log')
+
+    skipLineToLogFile(logfilepath,'w',True)
+    writeLineToLogFile(logfilepath,'a','=====================================================================================',True)
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','2D Lattice Boltzmann Method with D2Q9 lattice and Zou/He boundary conditions',True)
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','Rectangular channel with obstacle',True)
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','Luca Di Stasio, 2017-2018',True)
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','=====================================================================================',True)
+    skipLineToLogFile(logfilepath,'a',True)
+
     # read input file and assign data to variables
     inputFullPath=join(inputdir,inputfile)
     print('')
     print('Reading input file ' + inputFullPath + ' and assigning data to variables ...')
     keys = ['lx','ly','isObstacle','xObstacle','yObstacle','rObstacle','uMax','Re','Tmax','Tsave']
-    types = {}
-    types['lx'] = 'integer'
-    types['ly'] = 'integer'
-    types['isObstacle'] = 'boolean'
-    types['xObstacle'] = 'integer'
-    types['yObstacle'] = 'integer'
-    types['rObstacle'] = 'integer'
-    types['uMax'] = 'float'
-    types['Re'] = 'float'
-    types['Tmax'] = 'integer'
-    types['Tsave'] = 'integer'
-    inputData = parseInput(inputFullPath,keys,types,'#','=')
+    inputData = parseInput(inputFullPath,keys,'#','##','=')
     print('... done.')
     # check if input variables exists otherwise throw an error
     print('')
