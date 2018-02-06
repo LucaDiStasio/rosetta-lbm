@@ -256,33 +256,38 @@ def main(argv):
     writeLineToLogFile(logfilepath,'a','=====================================================================================',True)
     skipLineToLogFile(logfilepath,'a',True)
 
+    logindent = '    '
+
     # read input file and assign data to variables
     inputFullPath=join(inputdir,inputfile)
-    print('')
-    print('Reading input file ' + inputFullPath + ' and assigning data to variables ...')
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','Reading input file ' + inputFullPath + ' and assigning data to variables ...',True)
     keys = ['lx','ly','isObstacle','xObstacle','yObstacle','rObstacle','uMax','Re','Tmax','Tsave']
     inputData = parseInput(inputFullPath,keys,'#','##','=')
-    print('... done.')
+    writeLineToLogFile(logfilepath,'a','... done.',True)
+
     # check if input variables exists otherwise throw an error
-    print('')
-    print('Checking if input variables are set ...')
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','Checking if input variables are set ...',True)
     for key in keys:
         if key not in inputData:
-            print(key + ' is not defined. Error: check the input file for missing data. Terminating program.')
+            writeErrorToLogFile(logfilefullpath,'a','UNDEFINED INPUT DATA', key + ' is not defined. Error: check the input file for missing data. Terminating program.',True)
             sys.exit(2)
-    print('... done.')
+    writeLineToLogFile(logfilepath,'a','... done.',True)
+
     # set general flow properties
-    print('')
-    print('Setting general flow properties ...')
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','Setting general flow properties ...',True)
     if inputData['isObstacle']:
         inputData['nu'] = inputData['uMax']*2.0*inputData['rObstacle']/inputData['Re'] # kinematic viscosity
     else:
         inputData['nu'] = inputData['uMax']*inputData['ly']/inputData['Re']            # kinematic viscosity
     inputData['omega'] = 1.0/(3*inputData['nu']+0.5)                                   # relaxation parameter
-    print('... done.')
+    writeLineToLogFile(logfilepath,'a','... done.',True)
+
     # define D2Q9 lattice constants
-    print('')
-    print('Defining D2Q9 lattice weights, velocities and pairs of opposite velocities ...')
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','Defining D2Q9 lattice weights, velocities and pairs of opposite velocities ...',True)
     ws = [4.0/9.0,1.0/9.0,1.0/9.0,1.0/9.0,1.0/9.0,1.0/36.0,1.0/36.0,1.0/36.0,1.0/36.0]
     c = [[0,0],
          [1,0],
@@ -294,7 +299,8 @@ def main(argv):
          [-1,-1],
          [1,-1]]
     opposites = [1,4,5,2,3,8,9,6,7]
-    print('... done.')
+    writeLineToLogFile(logfilepath,'a','... done.',True)
+
     # summarize simulation parameters
     print('')
     print('SIMULATION PARAMETERS')
