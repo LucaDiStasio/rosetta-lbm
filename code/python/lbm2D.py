@@ -302,24 +302,24 @@ def main(argv):
     writeLineToLogFile(logfilepath,'a','... done.',True)
 
     # summarize simulation parameters
-    print('')
-    print('SIMULATION PARAMETERS')
-    print('')
-    print('                    Number of cells in x-direction lx = ' + str(inputData['lx']))
-    print('                    Number of cells in y-direction ly = ' + str(inputData['ly']))
-    print('Maximum velocity of Poiseuille flow at the inlet uMax = ' + str(inputData['uMax']))
-    print('                                   Reynolds number Re = ' + str(inputData['Re']))
-    print('                               Kinematic viscosity nu = ' + str(inputData['nu']))
-    print('                           Relaxation parameter omega = ' + str(inputData['omega']))
-    print('                      Total number of iterations Tmax = ' + str(inputData['Tmax']))
-    print('        Cycle time of saving to file operations Tsave = ' + str(inputData['Tsave']))
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','SIMULATION PARAMETERS',True)
+    skipLineToLogFile(logfilepath,'a',True)
+    writeLineToLogFile(logfilepath,'a','                    Number of cells in x-direction lx = ' + str(inputData['lx']),True)
+    writeLineToLogFile(logfilepath,'a','                    Number of cells in y-direction ly = ' + str(inputData['ly']),True)
+    writeLineToLogFile(logfilepath,'a','Maximum velocity of Poiseuille flow at the inlet uMax = ' + str(inputData['uMax']),True)
+    writeLineToLogFile(logfilepath,'a','                                   Reynolds number Re = ' + str(inputData['Re']),True)
+    writeLineToLogFile(logfilepath,'a','                               Kinematic viscosity nu = ' + str(inputData['nu']),True)
+    writeLineToLogFile(logfilepath,'a','                           Relaxation parameter omega = ' + str(inputData['omega']),True)
+    writeLineToLogFile(logfilepath,'a','                      Total number of iterations Tmax = ' + str(inputData['Tmax']),True)
+    writeLineToLogFile(logfilepath,'a','        Cycle time of saving to file operations Tsave = ' + str(inputData['Tsave']),True)
     if inputData['isObstacle']:
-      print('Obstacle is present:')
-      print('    Coordinate of obstacle''s center in x-direction xObstacle = ' + str(inputData['xObstacle']))
-      print('    Coordinate of obstacle''s center in x-direction yObstacle = ' + str(inputData['yObstacle']))
-      print('                                 Obstacle''s radius rObstacle = ' + str(inputData['rObstacle']))
+      writeLineToLogFile(logfilepath,'a','Obstacle is present:')
+      writeLineToLogFile(logfilepath,'a','    Coordinate of obstacle''s center in x-direction xObstacle = ' + str(inputData['xObstacle']),True)
+      writeLineToLogFile(logfilepath,'a','    Coordinate of obstacle''s center in x-direction yObstacle = ' + str(inputData['yObstacle']),True)
+      writeLineToLogFile(logfilepath,'a','                                 Obstacle''s radius rObstacle = ' + str(inputData['rObstacle']),True)
     else:
-      print('Obstacle is NOT present')
+      writeLineToLogFile(logfilepath,'a','Obstacle is NOT present',True)
 
     # locate obstacle
 
