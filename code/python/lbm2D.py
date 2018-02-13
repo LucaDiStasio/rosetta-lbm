@@ -28,7 +28,8 @@ DESCRIPTION
 2D Lattice Boltzmann Method with D2Q9 lattice and Zou/He boundary conditions.
 Rectangular channel with circular obstacle.
 
-Tested with Python 2.7 in Ubuntu 14.04
+Tested with Python 2.7 Anaconda 2.4.1 (64-bit) distribution
+       in Windows 10.
 
 '''
 
