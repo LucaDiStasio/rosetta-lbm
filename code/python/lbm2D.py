@@ -178,7 +178,21 @@ def parseInput(fileFullpath,keywords,keywordSep,commentSep,valueSep):
 #===============================================================================#
 
 def simpleLBMwv(D,Q):
-    
+    params = {}
+    if D==2:
+        if Q==9:
+            params['ws'] = [4.0/9.0,1.0/9.0,1.0/9.0,1.0/9.0,1.0/9.0,1.0/36.0,1.0/36.0,1.0/36.0,1.0/36.0]
+            params['c'] = [[0,0],
+                              [1,0],
+                              [0,1],
+                              [-1,0],
+                              [0,-1],
+                              [1,1],
+                              [-1,1],
+                              [-1,-1],
+                              [1,-1]]
+    return params
+
 
 #===============================================================================#
 #===============================================================================#
@@ -301,16 +315,7 @@ def main(argv):
     # define D2Q9 lattice constants
     skipLineToLogFile(logfilepath,'a',True)
     writeLineToLogFile(logfilepath,'a','Defining D2Q9 lattice weights, velocities and pairs of opposite velocities ...',True)
-    ws = [4.0/9.0,1.0/9.0,1.0/9.0,1.0/9.0,1.0/9.0,1.0/36.0,1.0/36.0,1.0/36.0,1.0/36.0]
-    c = [[0,0],
-         [1,0],
-         [0,1],
-         [-1,0],
-         [0,-1],
-         [1,1],
-         [-1,1],
-         [-1,-1],
-         [1,-1]]
+    LBMparams = simpleLBMwv(2,9)
     opposites = [1,4,5,2,3,8,9,6,7]
     writeLineToLogFile(logfilepath,'a','... done.',True)
 
